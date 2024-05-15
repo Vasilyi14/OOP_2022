@@ -1,32 +1,29 @@
 import pygame
 from pygame.draw import *
-import pygame
-from pygame.locals import *
 
 pygame.init()
 
-width, height = 400, 400
-screen = pygame.display.set_mode((width, height))
-pygame.display.set_caption('Злой смайлик')
+FPS = 30
+screen = pygame.display.set_mode((400, 400))
 
-# Цвета
-black = (0, 0, 0)
-yellow = (255, 255, 0)
+rect(screen, (255, 0, 255), (100, 100, 200, 200))
+rect(screen, (0, 0, 255), (100, 100, 200, 200), 5)
+polygon(screen, (255, 255, 0), [(100, 100), (200, 50),
+                                (300, 100), (100, 100)])
+polygon(screen, (0, 0, 255), [(100, 100), (200, 50),
+                              (300, 100), (100, 100)], 5)
+circle(screen, (0, 255, 0), (200, 175), 50)
+circle(screen, (255, 255, 255), (200, 175), 50, 5)
 
-running = True
-while running:
+pygame.display.update()
+clock = pygame.time.Clock()
+finished = False
+
+while not finished:
+    clock.tick(FPS)
     for event in pygame.event.get():
-        if event.type == QUIT:
-            running = False
-
-    screen.fill(black)
-
-    # Рисуем злой смайлик
-    pygame.draw.circle(screen, yellow, (200, 200), 100)  # голова
-    pygame.draw.circle(screen, black, (160, 170), 10)     # левый глаз
-    pygame.draw.circle(screen, black, (240, 170), 10)     # правый глаз
-    pygame.draw.arc(screen, black, (150, 180, 100, 60), 3.14, 6.28, 2)  # рот
-
-    pygame.display.flip()
+        if event.type == pygame.QUIT:
+            finished = True
 
 pygame.quit()
+
