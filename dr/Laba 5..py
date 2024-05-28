@@ -1,118 +1,85 @@
-Kseniya, [20 марта 2024 г., 15: 31:0
-8]:
+import pygame
+from pygame.draw import *
 from random import randint
 
-n = int(input("Введите кол-во строк лабиринта -> "))
-m = int(input("Введите кол-во столбцов лабиринта -> "))
-print("Теперь вводите лабиринт")
-print(".(точка) означает, что клетка пустая")
-print("+(плюс) означает, что в этой клетке стена")
+pygame.init()
+pygame.font.init()
 
-karta = []
-for i in range(n):
-    s = list(input("Введите строку -> "))
-    karta.append(s)
+FPS = 60
+TIME_LIFE = 1000
+last_time = pygame.time.get_ticks()
+SCREEN_WIDTH = 1400
+SCREEN_HEIGHT = 750
 
-# karta = [list("++.+"), list("...+"), list("+++.")]
-main_x = randint(0, n - 1)
-main_y = randint(0, m - 1)
-while karta[main_x][main_y] == '+':
-    main_x = randint(0, n - 1)
-    main_y = randint(0, m - 1)
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
-'''
-++.+
-...+
-+++.
-'''
+RED = (255, 0, 0)
+BLUE = (0, 0, 255)
+YELLOW = (255, 255, 0)
+GREEN = (0, 255, 0)
+MAGENTA = (255, 0, 255)
+CYAN = (0, 255, 255)
+BLACK = (0, 0, 0)
+COLORS = [RED, BLUE, YELLOW, GREEN, MAGENTA, CYAN]
 
-if main_x == 0 or main_x == n - 1:
-    karta[main_x][main_y] = '+'
-if main_y == 0 or main_y == m - 1:
-    karta[main_x][main_y] = '+'
+points = 0
+points_font = pygame.font.SysFont('Comic Sans MS', 30)
 
+MAX_BALLS = 5
+BALL_SPEED_MIN = -3
+BALL_SPEED_MAX = 3
 
-def go(main_x, main_y, k_now):
-    typik = False
-    k = k_now
-    x = main_x
-    y = main_y
-    while 0 < x < n - 1:
-        k += 1
-        if x - 1 >= 0 and karta[x - 1][y] == '.':
-            x -= 1
-            go(x, y, k)
-        elif x + 1 < n and karta[x + 1][y] == '.':
-            x += 1
-            go(x, y, k)
-        # Тупик
-        else:
-            typik = True
-            break
-    variants.append([typik, k, [x, y]])
+BORDER_LEFT = SCREEN_WIDTH // 4
+BORDER_RIGHT = SCREEN_WIDTH // 1.5
+BORDER_TOP = 0
+BORDER_BOTTOM = SCREEN_HEIGHT
 
-    typik = False
-    k = k_now
-    x = main_x
-    y = main_y
-    while 0 < y < n - 1:
-        k += 1
-        if y - 1 >= 0 and karta[x][y - 1] == '.':
-            y -= 1
-            go(x, y, k)
-        elif y + 1 < m and karta[x][y + 1] == '.':
-            y += 1
-            go(x, y, k)
-        # Тупик
-        else:
-            typik = True
-            break
-    variants.append([typik, k, [x, y]])
+balls_x = []
+balls_y = []
+balls_x_speed = []
+balls_y_speed = []
+balls_r = []
+balls_color = []
 
 
-main_x = 1
-main_y = 2
-variants = []
-go(main_x, main_y, 0)
+def new_ball(coords_x, coords_y, radius):
+    '''
+    Создает и возвращает параметры нового шар на экране
+    в случайных координатах и случайного цвета.
+    coords_x - кортеж из координат начала и конца по оси Х,
+    coords_y - кортеж из координат начала и конца по оси Y,
+    radius - кортеж из диапазона радиусов.
+    '''
+    x_start, x_end = coords_x
+    y_start, y_end = coords_y
+    r_start, r_end = radius
 
-for i in range(len(variants)):
-    print("Маршрут привел в ", variants[i][2][0] + 1, variants[i][2][1] + 1)
+    r = randint(r_start, r_end)
+    x = randint(x_start + r, x_end - r)
+    y = randint(y_start + r, y_end - r)
 
-Kseniya, [20 марта 2024 г., 16: 20:04]:
-from random import randint
+    color = COLORS[randint(0, 5)]
 
-n = int(input("Введите кол-во строк матрицы -> "))
-m = int(input("Введите кол-во столбцов матрицы -> "))
-matr = []
-a = 10 * n
-for i in range(n):
-    b = a + m
-    line = [randint(a, b)]
-    for j in range(m - 1):
-        value = randint(a, b)
-        while value in line or value <= line[-1]:
-            value = randint(a, b)
-            if line[-1] == b:
-                b += m
-        line.append(value)
-    matr.append(line)
-    a += randint(b - a, m + (b - a))
-print("Сформированная случайная матрица:")
-for i in range(n):
-    for j in range(m):
-        print(matr[i][j], end=' ')
-    print()
-k = int(input("Введите число k, которое попытаемся найти в матрице -> "))
+    speed_x = randint(BALL_SPEED_MIN, BALL_SPEED_MAX) / 5
+    speed_y = randint(BALL_SPEED_MIN, BALL_SPEED_MAX) / 5
 
-count = 1
-i_col = m - 1
-i_row = 0
+    return color, x, y, r, speed_x, speed_y
 
-isExistent = False
-# Поиск нужной строки
-while not isExistent:
-    isExistent = matr[i_row][i_col] == k
-    if isExistent:
-        break
-    count += 1
-...
+
+def click(event):
+    '''
+    Функция обработки нажатия мыши.
+    Проверяет, находятся ли координаты мыши в каком-либо круге,
+    если да, то начисляется 1 очко
+    '''
+    global points
+    mouse_x = event.pos[0]
+    mouse_y = event.pos[1]
+    for i in range(MAX_BALLS):
+        # Вычисляем расстояние между центром круга и координатами мыши
+        evklid_r = ((balls_x[i] - mouse_x)  2 +
+                                            (balls_y[i] - mouse_y)
+        2) ** 0.5
+        # Если расстояние меньше радиуса круга, значит мы попали в круг
+        if evklid_r <= balls_r[i]:
+            points += 1
